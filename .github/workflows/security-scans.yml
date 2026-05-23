@@ -1,0 +1,94 @@
+name: GitOps Security CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  security-orchestrator:
+    name: Gitops Initialization
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Audit Secrets Footprints
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Static Analysis of Environment Configuration Space
+      - name: Trivy Configuration Check
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          scan-type: "fs"
+          format: "sarif"
+          output: "trivy-fs-results.sarif"
+          severity: "HIGH,CRITICAL"
+
+      # Base Operating System Image Audit
+      - name: Trivy Core Image Check
+        uses: aquasecurity/trivy-action@master
+        continue-on-error: true
+        with:
+          image-ref: "wordpress:6.3-php8.2-fpm-alpine"
+          format: "sarif"
+          output: "trivy-image-results.sarif"
+          severity: "HIGH,CRITICAL"
+
+      # Publish Static Findings Natively
+      - name: Publish Static Infrastructure Analysis
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-fs-results.sarif"
+          category: "Trivy Infrastructure as Code"
+
+      - name: Publish Base Image Analysis
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-image-results.sarif"
+          category: "Trivy Base Image Audit"
+
+      # Trigger Live Webhook Sync to Portainer Setup
+      - name: Invoke Portainer GitOps Delivery
+        run: curl -X POST "${{ secrets.PORTAINER_WEBHOOK }}"
+
+      - name: Await Deployment on Portainer
+        run: sleep 30
+
+      # Dynamic Attack Phase (DAST) Against Live Edge Proxy Infrastructure
+      - name: Active Network WPScan Operations
+        continue-on-error: true
+        run: |
+          docker run --rm wpscanteam/wpscan \
+            --url https://magnumlab.duckdns.org \
+            --enumerate vp,vt \
+            --format json \
+            -o wpscan-results.json \
+            --api-token ${{ secrets.WPSCAN_API_TOKEN }}
+
+      # Translate DAST Data Maps Into SARIF Layouts
+      - name: Execute Conversion Parser Configuration
+        if: always()
+        run: python wpscan_to_sarif.py
+
+      # Push DAST metrics into GitHub Code Scanning Metrics
+      - name: Publish Dynamic Scan Map
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "wpscan-results.sarif"
+          category: "WPScan Live DAST Runtime"
