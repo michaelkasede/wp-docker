@@ -9,7 +9,7 @@ on:
 
 jobs:
   security-orchestrator:
-    name: Gitops Initialization
+    name: Gitops Security CI
     runs-on: ubuntu-latest
     permissions:
       security-events: write
