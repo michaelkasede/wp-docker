@@ -51,6 +51,7 @@ services:
 
 volumes:
   wp_data:
+    external: true
   db_data:
 
 networks:
