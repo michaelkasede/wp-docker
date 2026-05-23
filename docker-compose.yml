@@ -1,0 +1,60 @@
+---
+services:
+  # Mariadb MySql database for high perfomamce
+  mariadb:
+    image: mariadb:10.11
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - internal_net
+  
+  # Wordpress php-fpm optimized for high performance.
+  wordpress:
+    depends_on:
+      - mariadb
+    image: wordpress:6.3-php8.2-fpm-alpine
+    container_name: wordpress
+    restart: unless-stopped
+    environment:
+      WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+      WORDPRESS_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX}
+      WORDPRESS_CONFIG_EXTRA: |
+        define( 'WP_DEBUG', false );
+        define( 'COMPRESS_CSS', true );
+        define( 'COMPRESS_SCRIPTS', true );
+        define( 'CONCATENATE_SCRIPTS', true );
+        define( 'ENFORCE_GZIP', true );
+        define( 'AUTOSAVE_INTERVAL', 120 );
+        define( 'WP_POST_REVISIONS', 10);
+        define( 'MEDIA_TRASH', true );
+        define( 'EMPTY_TRASH_DAYS', 30 );
+        define( 'IMAGE_EDIT_OVERWRITE', true );
+        define( 'DISALLOW_FILE_EDIT', true );
+        define( 'WP_HOME','https://magnumlab.duckdns.org' );
+        define( 'WP_SITEURL','https://magnumlab.duckdns.org' );
+    volumes:
+      - wp_data:/var/www/html
+      - ./php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - proxy_net
+      - internal_net
+
+volumes:
+  wp_data:
+  db_data:
+
+networks:
+  internal_net:
+    external: false
+  proxy_net:
+    external: true
