@@ -42,6 +42,8 @@ services:
         define( 'DISALLOW_FILE_EDIT', true );
         define( 'WP_HOME','https://magnumlab.duckdns.org' );
         define( 'WP_SITEURL','https://magnumlab.duckdns.org' );
+        @ini_set( 'upload_max_filesize', '256M' );
+        @ini_set( 'post_max_size', '256M' );
     volumes:
       - wp_data:/var/www/html
       - ./php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
