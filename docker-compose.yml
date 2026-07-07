@@ -46,7 +46,7 @@ services:
         @ini_set( 'post_max_size', '256M' );
     volumes:
       - wp_data:/var/www/html
-      - ./php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ${PWD}/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
     networks:
       - proxy_net
       - internal_net
