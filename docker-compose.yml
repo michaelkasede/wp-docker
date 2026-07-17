@@ -40,8 +40,8 @@ services:
         define( 'EMPTY_TRASH_DAYS', 30 );
         define( 'IMAGE_EDIT_OVERWRITE', true );
         define( 'DISALLOW_FILE_EDIT', true );
-        define( 'WP_HOME','https://magnumlab.duckdns.org' );
-        define( 'WP_SITEURL','https://magnumlab.duckdns.org' );
+        define( 'WP_HOME','${SITE_URL}' );
+        define( 'WP_SITEURL','${SITE_URL}' );
     volumes:
       - wp_data:/var/www/html
       - ./php/custom.ini:/usr/local/etc/php/conf.d/custom.ini:ro
