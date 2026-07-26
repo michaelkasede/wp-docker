@@ -64,7 +64,15 @@ jobs:
 
       # Trigger Live Webhook Sync to Portainer Setup
       - name: Invoke Portainer GitOps Delivery
-        run: curl -X POST "${{ secrets.PORTAINER_WEBHOOK }}"
+        continue-on-error: true
+        env:
+          PORTAINER_WEBHOOK: ${{ secrets.PORTAINER_WEBHOOK }}
+        run: |
+          if [ -z "$PORTAINER_WEBHOOK" ]; then
+            echo "PORTAINER_WEBHOOK secret is not configured; skipping delivery."
+            exit 0
+          fi
+          curl --fail --silent --show-error --insecure -X POST "$PORTAINER_WEBHOOK"
 
       - name: Await Deployment on Portainer
         run: sleep 30
